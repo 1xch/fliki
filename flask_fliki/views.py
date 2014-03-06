@@ -10,11 +10,11 @@ _wiki = LocalProxy(lambda: current_app.extensions['fliki'])
 
 #@conditionally(config_value(_wiki.secure)) decorator to conditionally apply a decorator
 def index():
-    page = _wiki.get_or_404('index')
+    page = _wiki.get('index')
     return render_template(_wiki.display_view, page=page)
 
 def display(url):
-    page = _wiki.get_or_404(url)
+    page = _wiki.get(url)
     return render_template(_wiki.display_view, page=page)
 
 def create():
@@ -23,12 +23,12 @@ def create():
         return redirect(url_for('edit', url=form.clean_url(form.url.data)))
     return render_template(_wiki.create_view, form=form)
 
-def preview():
-    a = request.form
-    data = {}
-    processed = Processors(a['body'])
-    data['html'], data['body'], data['meta'] = processed.out()
-    return data['html']
+#def preview():
+#    a = request.form
+#    data = {}
+#    processed = _wiki.default_processor(a['body'])
+#    data['html'], data['body'], data['meta'] = processed.out()
+#    return data['html']
 
 #def move(url):
 #    page = _wiki.get_or_404(url)
@@ -99,9 +99,9 @@ def create_blueprint(wiki, import_name):
                  endpoint='wiki_create',
                  methods=['GET', 'POST'])(create)
 
-        bp.route(wiki.index_url+'/preview/',
-                 endpoint='wiki_preview',
-                 methods=['POST'])(preview)
+        #bp.route(wiki.index_url+'/preview/',
+        #         endpoint='wiki_preview',
+        #         methods=['POST'])(preview)
 
         #bp.route(wiki.index_url+'/<path:url>/move',
         #         endpoint='wiki_move',

@@ -7,13 +7,12 @@
 #from functools import wraps
 #from flask import (Flask, render_template, flash, redirect, url_for, request, abort)
 from werkzeug.local import LocalProxy
-from .wiki import Wiki
+from .wiki import Wiki, FlikiProcessor
 from .views import create_blueprint
 from .util import get_config
 
 # Convenient references
 _fliki = LocalProxy(lambda: current_app.extensions['fliki'])
-
 
 _default_config = {
     'BLUEPRINT_NAME': 'wiki',
@@ -21,6 +20,7 @@ _default_config = {
     'SUBDOMAIN': None,
     'EDITABLE': True,
     'SECURABLE': True,
+    'DEFAULT_PROCESSOR': FlikiProcessor,
     'CONTENT_DIR': 'fliki-content',
     'INDEX_URL': '/wiki',
     'DISPLAY_VIEW': 'wiki/display.html',
