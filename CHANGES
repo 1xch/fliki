@@ -1,0 +1,19 @@
+Flask-Fliki Changelog
+=======================
+
+Here you can see the full list of changes between each Flask-Fliki release.
+
+Version 0.0.7
+-------------
+
+Released March 6th 2014
+
+- very basic functionality
+
+
+Version 0.0.0
+-------------
+
+Released March 5th 2014
+
+- forked & made into an extension
