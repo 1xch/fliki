@@ -1,6 +1,8 @@
 from flask.ext.wtf import Form
 from wtforms import (TextField, TextAreaField, PasswordField)
 from wtforms.validators import (InputRequired, ValidationError)
+from werkzeug.local import LocalProxy
+
 
 class URLForm(Form):
     url = TextField('', [InputRequired()])
@@ -9,8 +11,8 @@ class URLForm(Form):
         if wiki.exists(field.data):
             raise ValidationError('The URL "%s" exists already.' % field.data)
 
-    def clean_url(self, url):
-        return Processors().clean_url(url)
+   # def clean_url(self, url):
+   #     return Processors().clean_url(url)
 
 #class SearchForm(Form):
 #    term = TextField('', [InputRequired()])

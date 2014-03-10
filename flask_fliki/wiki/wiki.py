@@ -1,110 +1,65 @@
 import os
 from flask import current_app
-from .page import Page
+import datastore
+from markdown import Markdown
+
+
+class Page(object):
+    def __init__(self, k, content, processor):
+        self.key = k
+        self.content = content
+        self.html = processor.convert(self.content)
+
+    def __html__(self):
+        return self.html
+
 
 class Wiki(object):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key.lower(), value)
+        if self.markup_processor:
+            self.processor = self.markup_processor
+        else:
+            self.processor = Markdown(extensions=['meta', 'extra', 'sane_lists'])
+        self.has_index()
 
-    @property
-    def root(self):
-        return "{}/{}".format(current_app.root_path, self.content_dir)
+    def has_index(self):
+        if not self.exists(self.key("index")):
+            self.put('index', "Title: index\nSummary: base page for wiki\n\nWelcome to your flask-wiki, index page is blank")
 
-    def path(self, url):
-        return os.path.join(self.root, "{}.md".format(url))
+    def key(self, item):
+        return datastore.Key(item)
 
-    def exists(self, url):
-        return os.path.exists(self.path(url))
+    def exists(self, key):
+        return self.datastore.contains(key)
 
-    def get(self, url):
-        if self.exists(url):
-            return Page(self.default_processor, self.path(url), url)
+    def get(self, item):
+        k = self.key(item)
+        if self.exists(k):
+            x = self.datastore.get(k)
+            return Page(k, x, self.processor)
         return None
 
-    #def get_or_404(self, url):
-    #    page = self.get(url)
-    #    if page:
-    #        return page
-    #    abort(404)
-
     def get_bare(self, url):
-        if self.exists(url):
+        k = self.key(item)
+        if self.exists(k):
             return False
-        return Page(self.default_processor, self.path(url), url, new=True)
+        return Page(self.default_processor, k, new=True)
 
-    def move(self, url, newurl):
-        os.rename(
-            os.path.join(self.root, url) + '.md',
-            os.path.join(self.root, newurl) + '.md'
-        )
+    def put(self, item, contents):
+        self.datastore.put(self.key(item), contents)
+
+    def move(self, item, newitem):
+        k1, k2 = self.key(item), self.key(newitem)
+        if self.exists(k1) and not self.exists(k2):
+            i = self.get(k1)
+            self.put(k2, i)
+            self.delete(k1)
 
     def delete(self, url):
-        path = self.path(url)
-        if not self.exists(url):
-            return False
-        print path
-        os.remove(path)
-        return True
-
-    #def index(self, attr=None):
-    #    def _walk(directory, path_prefix=()):
-    #        for name in os.listdir(directory):
-    #            fullname = os.path.join(directory, name)
-    #            if os.path.isdir(fullname):
-    #                _walk(fullname, path_prefix + (name,))
-    #            elif name.endswith('.md'):
-    #                if not path_prefix:
-    #                    url = name[:-3]
-    #                else:
-    #                    url = os.path.join(path_prefix[0], name[:-3])
-    #                if attr:
-    #                    pages[getattr(page, attr)] = page
-    #                else:
-    #                    pages.append(Page(fullname, url.replace('\\', '/')))
-    #    if attr:
-    #        pages = {}
-    #    else:
-    #        pages = []
-    #    _walk(self.root)
-    #    if not attr:
-    #        return sorted(pages, key=lambda x: x.title.lower())
-    #    return pages
-
-    #def get_by_title(self, title):
-    #    pages = self.index(attr='title')
-    #    return pages.get(title)
-
-    #def get_tags(self):
-    #    pages = self.index()
-    #    tags = {}
-    #    for page in pages:
-    #        pagetags = page.tags.split(',')
-    #        for tag in pagetags:
-    #            tag = tag.strip()
-    #            if tag == '':
-    #                continue
-    #            elif tags.get(tag):
-    #                tags[tag].append(page)
-    #            else:
-    #                tags[tag] = [page]
-    #    return tags
-
-    #def index_by_tag(self, tag):
-    #    pages = self.index()
-    #    tagged = []
-    #    for page in pages:
-    #        if tag in page.tags:
-    #            tagged.append(page)
-    #    return sorted(tagged, key=lambda x: x.title.lower())
-
-    #def search(self, term, attrs=['title', 'tags', 'body']):
-    #    pages = self.index()
-    #    regex = re.compile(term)
-    #    matched = []
-    #    for page in pages:
-    #        for attr in attrs:
-    #            if regex.search(getattr(page, attr)):
-    #                matched.append(page)
-    #                break
-    #    return matched
+        k = self.key(item)
+        if self.exists(k):
+            self.datastore.delete(k)
+            return True
+        return False

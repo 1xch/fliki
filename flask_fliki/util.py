@@ -26,8 +26,8 @@ def get_config(app):
     return dict([strip_prefix(i) for i in items if i[0].startswith(prefix)])
 
 def config_value(key, app=None, default=None):
-    """Get a Flask-Security configuration value.
-    :param key: The configuration key without the prefix `SECURITY_`
+    """Get a configuration value.
+    :param key: The configuration key without the prefix `WIKI_`
     :param app: An optional specific application to inspect. Defaults to Flask's
     `current_app`
     :param default: An optional default value if the value is not set

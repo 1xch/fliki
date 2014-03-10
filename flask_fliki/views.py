@@ -4,6 +4,7 @@ from flask import current_app, redirect, request, render_template, jsonify, \
 from werkzeug.local import LocalProxy
 #from .decorators import conditionally
 from .util import config_value
+from .wiki.forms import URLForm
 
 # Convenient references
 _wiki = LocalProxy(lambda: current_app.extensions['fliki'])
@@ -15,13 +16,15 @@ def index():
 
 def display(url):
     page = _wiki.get(url)
-    return render_template(_wiki.display_view, page=page)
+    if page:
+        return render_template(_wiki.display_view, page=page)
+    else:
+        render_template(_wiki.create_view, form=form)
 
 def create():
     form = URLForm()
     if form.validate_on_submit():
         return redirect(url_for('edit', url=form.clean_url(form.url.data)))
-    return render_template(_wiki.create_view, form=form)
 
 #def preview():
 #    a = request.form
@@ -97,7 +100,7 @@ def create_blueprint(wiki, import_name):
     if wiki.editable:
         bp.route(wiki.index_url+'/create/',
                  endpoint='wiki_create',
-                 methods=['GET', 'POST'])(create)
+                 methods=['POST'])(create)
 
         #bp.route(wiki.index_url+'/preview/',
         #         endpoint='wiki_preview',
