@@ -7,8 +7,7 @@ from setuptools import setup
 
 setup(
     name='Flask-Fliki',
-    version='',
-    license='MIT',
+    version='0.0.1'MIT',
     author='hurrata/thrisp',
     author_email='blueblank@gmail.com',
     description='flask wiki extension',
