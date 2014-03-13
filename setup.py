@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name='Flask-Fliki',
-    version='0',
+    version='0.0.1',
     url = 'https://github.com/thrisp/fliki',
     license='MIT',
     author='hurrata/thrisp',
