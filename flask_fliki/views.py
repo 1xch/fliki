@@ -1,15 +1,9 @@
-from flask import current_app, redirect, request, render_template, jsonify, \
-    after_this_request, Blueprint
+from flask import (current_app, redirect, request, render_template,
+    Blueprint, url_for)
+from .util import config_value, _wiki, do_flash, get_message
+from .wiki.forms import EditorForm, MoveForm, DeleteForm
 
-from werkzeug.local import LocalProxy
-#from .decorators import conditionally
-from .util import config_value
-from .wiki.forms import URLForm
 
-# Convenient references
-_wiki = LocalProxy(lambda: current_app.extensions['fliki'])
-
-#@conditionally(config_value(_wiki.secure)) decorator to conditionally apply a decorator
 def index():
     page = _wiki.get('index')
     return render_template(_wiki.display_view, page=page)
@@ -18,69 +12,63 @@ def display(url):
     page = _wiki.get(url)
     if page:
         return render_template(_wiki.display_view, page=page)
+    return redirect(url_for('.wiki_edit', url=url))
+
+def preview(url):
+    page = _wiki.get(url)
+    if page:
+        return page.html
+
+def edit(url):
+    page = _wiki.get(url)
+    if page:
+        first = False
+        forms = {'edit_form': EditorForm(url=url, edit_content=page.raw),
+                 'move_form': MoveForm(old=url),
+                 'delete_form': DeleteForm(delete=url)}
     else:
-        render_template(_wiki.create_view, form=form)
+        first=True
+        forms={'edit_form': EditorForm(url=url)}
+    return render_template(_wiki.edit_view,
+                           first=first,
+                           forms=forms,
+                           page=page)
 
-def create():
-    form = URLForm()
+def save():
+    r = request.form
+    form = EditorForm(url=r['pagekey'], edit_content=r['edit_content'])
     if form.validate_on_submit():
-        return redirect(url_for('edit', url=form.clean_url(form.url.data)))
+        out = _wiki.put(form.pagekey.data, form.edit_content.data)
+    if out:
+        do_flash('EDIT_PAGE_SUCCESS', page=form.pagekey.data)
+    else:
+        do_flash('EDIT_PAGE_FAIL', page=form.pagekey.data)
+    return redirect(url_for('.wiki_display', url=form.key))
 
-#def preview():
-#    a = request.form
-#    data = {}
-#    processed = _wiki.default_processor(a['body'])
-#    data['html'], data['body'], data['meta'] = processed.out()
-#    return data['html']
+def move():
+    r = request.form
+    form = MoveForm(old=r['oldkey'], new=r['newkey'])
+    if form.validate_on_submit():
+        _wiki.move(form.oldkey.data, form.newkey.data)
+        do_flash('MOVE_PAGE_SUCCESS', old_page=form.oldkey.data, new_page=form.newkey.data)
+        return redirect(url_for('.wiki_display', url=form.newkey.data))
+    else:
+        do_flash('MOVE_PAGE_FAIL', old_page=form.oldkey.data)
+        return redirect(url_for('.wiki_display', url=form.oldkey.data))
 
-#def move(url):
-#    page = _wiki.get_or_404(url)
-#    form = URLForm(obj=page)
-#    if form.validate_on_submit():
-#        newurl = form.url.data
-#        wiki.move(url, newurl)
-#        return redirect(url_for('.display', url=newurl))
-#    return render_template(_wiki.move_view, form=form, page=page)
+def delete():
+    r = request.form
+    form = DeleteForm(delete=r['delete'])
+    if form.validate_on_submit():
+        out = _wiki.delete(form.delete.data)
+    if out:
+        url='index'
+        do_flash('DELETE_PAGE_SUCCESS', page=form.delete.data)
+    else:
+        url = form.delete.data
+        do_flash('DELETE_PAGE_FAIL', page=form.delete.data)
+    return redirect(url_for('.wiki_display', url=url))
 
-#def delete(url):
-#    page = _wiki.get_or_404(url)
-#    _wiki.delete(url)
-#    flash("Page {} was deleted.".format(page.title), 'success')
-#    return redirect(url_for('index'))
-
-#def edit(url):
-#    page = _wiki.get(url)
-#    form = EditorForm(obj=page)
-#    if form.validate_on_submit():
-#        if not page:
-#            page = _wiki.get_bare(url)
-#        form.populate_obj(page)
-#        page.save()
-#        flash("{} was saved.".format(page.title), 'success')
-#        return redirect(url_for('display', url=url))
-#    return render_template(_wiki.edit_view, form=form, page=page)
-
-#@app.route('/tags/')
-#@protect
-#def tags():
-#    tags = wiki.get_tags()
-#    return render_template('tags.html', tags=tags)
-
-#@app.route('/tag/<string:name>/')
-#@protect
-#def tag(name):
-#    tagged = wiki.index_by_tag(name)
-#    return render_template('tag.html', pages=tagged, tag=name)
-
-#@app.route('/search/', methods=['GET', 'POST'])
-#@protect
-#def search():
-#    form = SearchForm()
-#    if form.validate_on_submit():
-#        results = wiki.search(form.term.data)
-#        return render_template('search.html', form=form,
-#                               results=results, search=form.term.data)
-#    return render_template('search.html', form=form, search=None)
 
 def create_blueprint(wiki, import_name):
     bp = Blueprint(wiki.blueprint_name,
@@ -89,33 +77,33 @@ def create_blueprint(wiki, import_name):
                    subdomain=wiki.subdomain,
                    template_folder='templates')
 
-    bp.route(wiki.index_url,
+    bp.route('/',
              endpoint='wiki_index',
              methods=['GET'])(index)
 
-    bp.route(wiki.index_url+'/<path:url>/',
+    bp.route('/<path:url>/',
              endpoint='wiki_display',
              methods=['GET'])(display)
 
     if wiki.editable:
-        bp.route(wiki.index_url+'/create/',
-                 endpoint='wiki_create',
-                 methods=['POST'])(create)
+        bp.route('/<path:url>/preview',
+                 endpoint='wiki_preview',
+                 methods=['GET'])(preview)
 
-        #bp.route(wiki.index_url+'/preview/',
-        #         endpoint='wiki_preview',
-        #         methods=['POST'])(preview)
+        bp.route('/<path:url>/edit',
+                 endpoint='wiki_edit',
+                 methods=['GET'])(edit)
 
-        #bp.route(wiki.index_url+'/<path:url>/move',
-        #         endpoint='wiki_move',
-        #         methods=['GET', 'POST'])(move)
+        bp.route('/move',
+                 endpoint='wiki_move',
+                 methods=['POST'])(move)
 
-        #bp.route(wiki.index_url+'/<path:url>/edit',
-        #         endpoint='wiki_edit',
-        #         methods=['GET', 'POST'])(edit)
+        bp.route('/save',
+                 endpoint='wiki_save',
+                 methods=['POST'])(save)
 
-        #bp.route(wiki.index_url+'/<path:url>/delete',
-        #         endpoint='wiki_delete',
-        #         methods=['GET'])(delete)
+        bp.route('/delete',
+                 endpoint='wiki_delete',
+                 methods=['POST'])(delete)
 
     return bp

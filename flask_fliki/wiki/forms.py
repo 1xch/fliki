@@ -1,23 +1,46 @@
+from flask import current_app
 from flask.ext.wtf import Form
-from wtforms import (TextField, TextAreaField, PasswordField)
+from wtforms import (HiddenField, TextField, TextAreaField, SubmitField)
 from wtforms.validators import (InputRequired, ValidationError)
 from werkzeug.local import LocalProxy
+from ..util import _wiki, clean_url, bare_url
 
 
-class URLForm(Form):
-    url = TextField('', [InputRequired()])
+class WikiForm(Form):
+    def __init__(self, **kwargs):
+        super(WikiForm, self).__init__(**kwargs)
 
-    def validate_url(form, field):
-        if wiki.exists(field.data):
-            raise ValidationError('The URL "%s" exists already.' % field.data)
 
-   # def clean_url(self, url):
-   #     return Processors().clean_url(url)
+class EditorForm(WikiForm):
 
-#class SearchForm(Form):
-#    term = TextField('', [InputRequired()])
+    pagekey = HiddenField('')
+    edit_content = TextAreaField('', [InputRequired()])
+    submit = SubmitField('create or save page')
 
-class EditorForm(Form):
-    title = TextField('', [InputRequired()])
-    body = TextAreaField('', [InputRequired()])
-    tags = TextField('')
+    def __init__(self, **kwargs):
+        super(EditorForm, self).__init__(**kwargs)
+        self.key = clean_url(kwargs.get('url', None))
+        self.bare = bare_url(self.key)
+        self.pagekey.data = self.key
+
+
+class MoveForm(WikiForm):
+
+    oldkey = HiddenField('')
+    newkey = TextField('')
+    submit = SubmitField('move page')
+
+    def __init__(self, **kwargs):
+        super(MoveForm, self).__init__(**kwargs)
+        self.oldkey.data = kwargs.get('old', None)
+        self.newkey.data = kwargs.get('new', None)
+
+
+class DeleteForm(WikiForm):
+
+    delete = HiddenField('')
+    submit = SubmitField('delete page')
+
+    def __init__(self, **kwargs):
+        super(DeleteForm, self).__init__(**kwargs)
+        self.delete.data = kwargs.get('delete', None)

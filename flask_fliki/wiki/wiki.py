@@ -7,8 +7,10 @@ from markdown import Markdown
 class Page(object):
     def __init__(self, k, content, processor):
         self.key = k
-        self.content = content
-        self.html = processor.convert(self.content)
+        self.html = processor.convert(content)
+        self.meta = processor.Meta
+        self.raw = content
+        processor.reset()
 
     def __html__(self):
         return self.html
@@ -21,7 +23,7 @@ class Wiki(object):
         if self.markup_processor:
             self.processor = self.markup_processor
         else:
-            self.processor = Markdown(extensions=['meta', 'extra', 'sane_lists'])
+            self.processor = Markdown(['meta', 'extra', 'sane_lists'])
         self.has_index()
 
     def has_index(self):
@@ -37,27 +39,24 @@ class Wiki(object):
     def get(self, item):
         k = self.key(item)
         if self.exists(k):
-            x = self.datastore.get(k)
-            return Page(k, x, self.processor)
+            content = self.datastore.get(k)
+            return Page(k, content, self.processor)
         return None
 
-    def get_bare(self, url):
-        k = self.key(item)
-        if self.exists(k):
-            return False
-        return Page(self.default_processor, k, new=True)
-
     def put(self, item, contents):
-        self.datastore.put(self.key(item), contents)
+        k = self.key(item)
+        self.datastore.put(k, contents)
+        if self.exists(k):
+            return True
 
     def move(self, item, newitem):
         k1, k2 = self.key(item), self.key(newitem)
         if self.exists(k1) and not self.exists(k2):
-            i = self.get(k1)
-            self.put(k2, i)
+            i = self.datastore.get(k1)
+            self.datastore.put(k2, i)
             self.delete(k1)
 
-    def delete(self, url):
+    def delete(self, item):
         k = self.key(item)
         if self.exists(k):
             self.datastore.delete(k)
