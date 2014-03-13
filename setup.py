@@ -7,8 +7,7 @@ from setuptools import setup
 
 setup(
     name='Flask-Fliki',
-    version='',
-    url='https://github.com/thrisp/flask_macro4',
+    version='0.0.1'https://github.com/thrisp/flask_macro4',
     license='MIT',
     author='hurrata/thrisp',
     author_email='blueblank@gmail.com',
