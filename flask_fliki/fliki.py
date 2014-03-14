@@ -14,7 +14,7 @@ _default_config = {
     'MARKUP_PROCESSOR': None,
     'CONTENT_DIR': 'fliki-content',
     'DISPLAY_VIEW': 'wiki/display.html',
-    'EDIT_VIEW': 'wiki/editor.html'
+    'EDIT_VIEW': 'wiki/edit.html'
 }
 
 

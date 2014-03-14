@@ -1,7 +1,7 @@
 from flask import (current_app, redirect, request, render_template,
     Blueprint, url_for)
-from .util import config_value, _wiki, do_flash, get_message
-from .wiki.forms import EditorForm, MoveForm, DeleteForm
+from .util import config_value, _wiki, flash_next
+from .forms import EditorForm, MoveForm, DeleteForm
 
 
 def index():
@@ -40,20 +40,21 @@ def save():
     if form.validate_on_submit():
         out = _wiki.put(form.pagekey.data, form.edit_content.data)
     if out:
-        do_flash('EDIT_PAGE_SUCCESS', page=form.pagekey.data)
+        flash_next('EDIT_PAGE_SUCCESS', page=form.pagekey.data)
     else:
-        do_flash('EDIT_PAGE_FAIL', page=form.pagekey.data)
+        flash_next('EDIT_PAGE_FAIL', page=form.pagekey.data)
     return redirect(url_for('.wiki_display', url=form.key))
 
 def move():
     r = request.form
     form = MoveForm(old=r['oldkey'], new=r['newkey'])
     if form.validate_on_submit():
-        _wiki.move(form.oldkey.data, form.newkey.data)
-        do_flash('MOVE_PAGE_SUCCESS', old_page=form.oldkey.data, new_page=form.newkey.data)
+        out = _wiki.move(form.oldkey.data, form.newkey.data)
+    if out:
+        flash_next('MOVE_PAGE_SUCCESS', old_page=form.oldkey.data, new_page=form.newkey.data)
         return redirect(url_for('.wiki_display', url=form.newkey.data))
     else:
-        do_flash('MOVE_PAGE_FAIL', old_page=form.oldkey.data)
+        flash_next('MOVE_PAGE_FAIL', old_page=form.oldkey.data)
         return redirect(url_for('.wiki_display', url=form.oldkey.data))
 
 def delete():
@@ -63,10 +64,10 @@ def delete():
         out = _wiki.delete(form.delete.data)
     if out:
         url='index'
-        do_flash('DELETE_PAGE_SUCCESS', page=form.delete.data)
+        flash_next('DELETE_PAGE_SUCCESS', page=form.delete.data)
     else:
         url = form.delete.data
-        do_flash('DELETE_PAGE_FAIL', page=form.delete.data)
+        flash_next('DELETE_PAGE_FAIL', page=form.delete.data)
     return redirect(url_for('.wiki_display', url=url))
 
 

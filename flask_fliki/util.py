@@ -1,19 +1,8 @@
 import re
-from flask import current_app, url_for
+from flask import current_app, url_for, flash
 from werkzeug import LocalProxy
 
 _wiki = LocalProxy(lambda: current_app.extensions['fliki'])
-
-#def get_url(endpoint_or_url):
-#    """Returns a URL if a valid endpoint is found. Otherwise, returns the
-#    provided value.
-#
-#    :param endpoint_or_url: The endpoint name or URL to default to
-#    """
-#    try:
-#        return url_for(endpoint_or_url)
-#    except:
-#        return endpoint_or_url
 
 def get_config(app):
     """Conveniently get the security configuration for the specified
@@ -62,10 +51,8 @@ def clean_url(url):
         return re.sub(url_core, "", url)
     return None
 
-def bare_url(url):
-    if url:
-        return clean_url(url)[1:-1]
-    return None
+def flash_next(message, **kwargs):
+    return do_flash(*get_message(message, **kwargs))
 
 def do_flash(message, category=None):
     """Flash a message depending on if the `FLASH_MESSAGES` configuration
@@ -79,4 +66,4 @@ def do_flash(message, category=None):
 
 def get_message(key, **kwargs):
     rv = config_value('MSG_' + key)
-    return rv[0].format(kwargs), rv[1]
+    return rv[0].format(**kwargs), rv[1]

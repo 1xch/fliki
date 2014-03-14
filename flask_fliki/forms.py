@@ -3,7 +3,7 @@ from flask.ext.wtf import Form
 from wtforms import (HiddenField, TextField, TextAreaField, SubmitField)
 from wtforms.validators import (InputRequired, ValidationError)
 from werkzeug.local import LocalProxy
-from ..util import _wiki, clean_url, bare_url
+from .util import _wiki, clean_url
 
 
 class WikiForm(Form):
@@ -20,7 +20,6 @@ class EditorForm(WikiForm):
     def __init__(self, **kwargs):
         super(EditorForm, self).__init__(**kwargs)
         self.key = clean_url(kwargs.get('url', None))
-        self.bare = bare_url(self.key)
         self.pagekey.data = self.key
 
 

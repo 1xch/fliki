@@ -55,6 +55,7 @@ class Wiki(object):
             i = self.datastore.get(k1)
             self.datastore.put(k2, i)
             self.delete(k1)
+            return True
 
     def delete(self, item):
         k = self.key(item)
