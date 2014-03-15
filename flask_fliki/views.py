@@ -29,21 +29,17 @@ def edit(url):
     else:
         first=True
         forms={'edit_form': EditorForm(url=url)}
-    return render_template(_wiki.edit_view,
-                           first=first,
-                           forms=forms,
-                           page=page)
+    return render_template(_wiki.edit_view, first=first, forms=forms, page=page)
 
 def save():
     r = request.form
     form = EditorForm(url=r['pagekey'], edit_content=r['edit_content'])
     page = form.pagekey.data
     if form.validate_on_submit():
-        out = _wiki.put(page, form.edit_content.data)
-    if out:
-        flash_next('EDIT_PAGE_SUCCESS', page=page)
-    else:
-        flash_next('EDIT_PAGE_FAIL', page=page)
+        if _wiki.put(page, form.edit_content.data):
+            flash_next('EDIT_PAGE_SUCCESS', page=page)
+        else:
+            flash_next('EDIT_PAGE_FAIL', page=page)
     return redirect(url_for('.wiki_display', url=page))
 
 def move():
@@ -52,28 +48,24 @@ def move():
     old = form.oldkey.data
     new = form.newkey.data
     if form.validate_on_submit():
-        out = _wiki.move(old, new)
-    if out:
-        flash_next('MOVE_PAGE_SUCCESS', old_page=old, new_page=new)
-        return redirect(url_for('.wiki_display', url=new))
-    else:
-        flash_next('MOVE_PAGE_FAIL', old_page=old)
-        return redirect(url_for('.wiki_display', url=old))
+        if _wiki.move(old, new):
+            flash_next('MOVE_PAGE_SUCCESS', old_page=old, new_page=new)
+            return redirect(url_for('.wiki_display', url=new))
+    flash_next('MOVE_PAGE_FAIL', old_page=old)
+    return redirect(url_for('.wiki_display', url=old))
 
 def delete():
     r = request.form
     form = DeleteForm(delete=r['delete'])
     page = form.delete.data
     if form.validate_on_submit():
-        out = _wiki.delete(page)
-    if out:
-        url='index'
-        flash_next('DELETE_PAGE_SUCCESS', page=page)
-    else:
-        url = form.delete.data
-        flash_next('DELETE_PAGE_FAIL', page=page)
+        if _wiki.delete(page):
+            url='index'
+            flash_next('DELETE_PAGE_SUCCESS', page=page)
+        else:
+            url = form.delete.data
+            flash_next('DELETE_PAGE_FAIL', page=page)
     return redirect(url_for('.wiki_display', url=url))
-
 
 def create_blueprint(wiki, import_name):
     bp = Blueprint(wiki.blueprint_name,
