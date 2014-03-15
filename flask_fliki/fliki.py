@@ -44,6 +44,7 @@ def _get_wiki(app, datastore, **kwargs):
         ))
 
     wiki = Wiki(**kwargs)
+
     return wiki
 
 

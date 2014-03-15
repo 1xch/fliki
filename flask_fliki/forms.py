@@ -14,7 +14,7 @@ class WikiForm(Form):
 class EditorForm(WikiForm):
 
     pagekey = HiddenField('')
-    edit_content = TextAreaField('', [InputRequired()])
+    edit_content = TextAreaField('')
     submit = SubmitField('create or save page')
 
     def __init__(self, **kwargs):

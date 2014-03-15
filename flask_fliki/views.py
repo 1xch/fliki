@@ -37,37 +37,41 @@ def edit(url):
 def save():
     r = request.form
     form = EditorForm(url=r['pagekey'], edit_content=r['edit_content'])
+    page = form.pagekey.data
     if form.validate_on_submit():
-        out = _wiki.put(form.pagekey.data, form.edit_content.data)
+        out = _wiki.put(page, form.edit_content.data)
     if out:
-        flash_next('EDIT_PAGE_SUCCESS', page=form.pagekey.data)
+        flash_next('EDIT_PAGE_SUCCESS', page=page)
     else:
-        flash_next('EDIT_PAGE_FAIL', page=form.pagekey.data)
-    return redirect(url_for('.wiki_display', url=form.key))
+        flash_next('EDIT_PAGE_FAIL', page=page)
+    return redirect(url_for('.wiki_display', url=page))
 
 def move():
     r = request.form
     form = MoveForm(old=r['oldkey'], new=r['newkey'])
+    old = form.oldkey.data
+    new = form.newkey.data
     if form.validate_on_submit():
-        out = _wiki.move(form.oldkey.data, form.newkey.data)
+        out = _wiki.move(old, new)
     if out:
-        flash_next('MOVE_PAGE_SUCCESS', old_page=form.oldkey.data, new_page=form.newkey.data)
-        return redirect(url_for('.wiki_display', url=form.newkey.data))
+        flash_next('MOVE_PAGE_SUCCESS', old_page=old, new_page=new)
+        return redirect(url_for('.wiki_display', url=new))
     else:
-        flash_next('MOVE_PAGE_FAIL', old_page=form.oldkey.data)
-        return redirect(url_for('.wiki_display', url=form.oldkey.data))
+        flash_next('MOVE_PAGE_FAIL', old_page=old)
+        return redirect(url_for('.wiki_display', url=old))
 
 def delete():
     r = request.form
     form = DeleteForm(delete=r['delete'])
+    page = form.delete.data
     if form.validate_on_submit():
-        out = _wiki.delete(form.delete.data)
+        out = _wiki.delete(page)
     if out:
         url='index'
-        flash_next('DELETE_PAGE_SUCCESS', page=form.delete.data)
+        flash_next('DELETE_PAGE_SUCCESS', page=page)
     else:
         url = form.delete.data
-        flash_next('DELETE_PAGE_FAIL', page=form.delete.data)
+        flash_next('DELETE_PAGE_FAIL', page=page)
     return redirect(url_for('.wiki_display', url=url))
 
 
