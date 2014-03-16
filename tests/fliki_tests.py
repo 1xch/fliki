@@ -24,8 +24,13 @@ class FlikiBase(FlikiTest):
         self.assertIn("A random page", r.data)
 
     def test_move_page(self):
-        r = self._post('/test/move', data=dict(oldkey='random_page', newkey='a/new/random/page'))
-        self.assertIn("A random page", r.data)
+        r1 = self._post('/test/move', data=dict(oldkey='random_page', newkey='a/new/random/page'))
+        r2 = self._get('/wiki/a/new/random/page')
+        r3 = self._get('/wiki/random_page')
+        self.assertIn("A random page", r1.data)
+        self.assertEqual(r1.data, r2.data)
+        self.assertNotIn("A random page", r3.data)
+
 
     def test_delete_page(self):
         r = self._post('/test/delete', data=dict(delete='random_page'))
