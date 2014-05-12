@@ -1,9 +1,6 @@
-from flask import current_app
 from flask.ext.wtf import Form
 from wtforms import (HiddenField, TextField, TextAreaField, SubmitField)
-from wtforms.validators import (InputRequired, ValidationError)
-from werkzeug.local import LocalProxy
-from .util import _wiki, clean_url
+from .util import clean_url
 
 
 class WikiForm(Form):
@@ -12,7 +9,6 @@ class WikiForm(Form):
 
 
 class EditorForm(WikiForm):
-
     pagekey = HiddenField('')
     edit_content = TextAreaField('')
     submit = SubmitField('create or save page')
@@ -24,7 +20,6 @@ class EditorForm(WikiForm):
 
 
 class MoveForm(WikiForm):
-
     oldkey = HiddenField('')
     newkey = TextField('')
     submit = SubmitField('move page')
@@ -36,7 +31,6 @@ class MoveForm(WikiForm):
 
 
 class DeleteForm(WikiForm):
-
     delete = HiddenField('')
     submit = SubmitField('delete page')
 

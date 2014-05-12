@@ -8,16 +8,19 @@ def index():
     page = _wiki.get('index')
     return render_template(_wiki.display_view, page=page)
 
+
 def display(url):
     page = _wiki.get(url)
     if page:
         return render_template(_wiki.display_view, page=page)
     return redirect(url_for('.wiki_edit', url=url))
 
+
 def preview(url):
     page = _wiki.get(url)
     if page:
         return page.html
+
 
 def edit(url):
     page = _wiki.get(url)
@@ -31,6 +34,7 @@ def edit(url):
         forms={'edit_form': EditorForm(url=url)}
     return render_template(_wiki.edit_view, first=first, forms=forms, page=page)
 
+
 def save():
     r = request.form
     form = EditorForm(url=r['pagekey'], edit_content=r['edit_content'])
@@ -41,6 +45,7 @@ def save():
         else:
             flash_next('EDIT_PAGE_FAIL', page=page)
     return redirect(url_for('.wiki_display', url=page))
+
 
 def move():
     r = request.form
@@ -54,6 +59,7 @@ def move():
     flash_next('MOVE_PAGE_FAIL', old_page=old)
     return redirect(url_for('.wiki_display', url=old))
 
+
 def delete():
     r = request.form
     form = DeleteForm(delete=r['delete'])
@@ -66,6 +72,7 @@ def delete():
             url = form.delete.data
             flash_next('DELETE_PAGE_FAIL', page=page)
     return redirect(url_for('.wiki_display', url=url))
+
 
 def create_blueprint(wiki, import_name):
     bp = Blueprint(wiki.blueprint_name,
