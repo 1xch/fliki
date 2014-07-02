@@ -1,6 +1,4 @@
-import os
-from flask import current_app
-import datastore
+from datastore.core import Key
 from markdown import Markdown
 
 
@@ -31,7 +29,7 @@ class Wiki(object):
             self.put('index', "Title: index\nSummary: base page for wiki\n\nWelcome to your flask-wiki, index page is blank")
 
     def key(self, item):
-        return datastore.Key(item)
+        return Key(item)
 
     def exists(self, key):
         return self.datastore.contains(key)

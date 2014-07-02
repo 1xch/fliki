@@ -30,7 +30,7 @@ _default_messages = {
 
 def _context_processor(wiki):
     ctx_prcs = {}
-    ctx_prcs.update({'url_for_wiki': url_for_wiki, 'wiki':_wiki})
+    ctx_prcs.update({'url_for_wiki': url_for_wiki, 'wiki': wiki})
     return ctx_prcs
 
 
@@ -38,10 +38,7 @@ def _get_wiki(app, datastore, **kwargs):
     for key, value in get_config(app).items():
         kwargs[key.lower()] = value
 
-    kwargs.update(dict(
-            app=app,
-            datastore=datastore,
-        ))
+    kwargs.update(dict(app=app, datastore=datastore))
 
     wiki = Wiki(**kwargs)
 
